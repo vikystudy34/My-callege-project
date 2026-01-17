@@ -2,6 +2,9 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import './Inventory.css';
 
+// Yahan maine tera backend link fix kar diya hai
+const API_BASE_URL = "https://vicky-inventory-backend.onrender.com/api";
+
 function App() {
   const [products, setProducts] = useState([]);
   const [sales, setSales] = useState([]);
@@ -10,37 +13,36 @@ function App() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
   
-  // Edit logic ke liye naye states
   const [editId, setEditId] = useState(null);
   const [editFormData, setEditFormData] = useState({ name: '', price: '', stock_quantity: '' });
 
   const fetchData = async () => {
     try {
-      const res = await axios.get('http://localhost:5000/api/products');
+      // Localhost ki jagah ab ye Render se data layega
+      const res = await axios.get(`${API_BASE_URL}/products`);
       setProducts(res.data);
-      const saleRes = await axios.get('http://localhost:5000/api/sales-summary');
+      const saleRes = await axios.get(`${API_BASE_URL}/sales-summary`);
       setSales(saleRes.data);
-    } catch (err) { console.error(err); }
+    } catch (err) { console.error("Data fetch nahi ho raha:", err); }
   };
 
   useEffect(() => { fetchData(); }, []);
 
   const handleAdd = (e) => {
     e.preventDefault();
-    axios.post('http://localhost:5000/api/add', formData).then(() => {
+    axios.post(`${API_BASE_URL}/add`, formData).then(() => {
       alert("Product Added!"); fetchData(); setView('inventory');
       setFormData({ name: '', price: '', stock_quantity: '' });
     });
   };
 
-  // --- EDIT & UPDATE LOGIC ---
   const handleEditClick = (p) => {
     setEditId(p._id);
     setEditFormData({ name: p.name, price: p.price, stock_quantity: p.stock_quantity });
   };
 
   const handleUpdate = (id) => {
-    axios.put(`http://localhost:5000/api/update/${id}`, editFormData).then(() => {
+    axios.put(`${API_BASE_URL}/update/${id}`, editFormData).then(() => {
       alert("Updated Successfully!");
       setEditId(null);
       fetchData();
@@ -91,7 +93,6 @@ function App() {
                 {products.map(p => (
                   <tr key={p._id} className={p.stock_quantity < 10 ? "table-danger" : ""}>
                     {editId === p._id ? (
-                      // --- EDIT MODE ROW ---
                       <>
                         <td><input type="text" className="form-control form-control-sm" value={editFormData.name} onChange={(e) => setEditFormData({...editFormData, name: e.target.value})} /></td>
                         <td><input type="number" className="form-control form-control-sm" value={editFormData.price} onChange={(e) => setEditFormData({...editFormData, price: e.target.value})} /></td>
@@ -102,14 +103,13 @@ function App() {
                         </td>
                       </>
                     ) : (
-                      // --- NORMAL MODE ROW ---
                       <>
                         <td className="fw-bold">{p.name}</td>
                         <td>₹{p.price}</td>
                         <td>{p.stock_quantity}</td>
                         <td>
                           <button className="btn btn-warning btn-sm me-2" onClick={() => handleEditClick(p)}>Edit</button>
-                          <button className="btn btn-outline-danger btn-sm" onClick={() => axios.delete(`http://localhost:5000/api/delete/${p._id}`).then(()=>fetchData())}>Delete</button>
+                          <button className="btn btn-outline-danger btn-sm" onClick={() => axios.delete(`${API_BASE_URL}/delete/${p._id}`).then(()=>fetchData())}>Delete</button>
                         </td>
                       </>
                     )}

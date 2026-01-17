@@ -1,119 +1,28 @@
-:root {
-  --primary-dark: #2c3e50;
-  --accent-blue: #3498db;
-  --success-green: #27ae60;
-  --danger-red: #e74c3c;
-  --bg-light: #f4f7f6;
-}
-
-body {
-  background-color: var(--bg-light);
-  font-family: 'Inter', sans-serif;
-  overflow-x: hidden;
-}
-
-/* --- Sidebar Style (Full Height) --- */
 .sidebar-overlay {
     position: fixed;
     top: 0;
     left: 0;
-    width: 280px;
+    width: 250px;
     height: 100vh;
-    background: var(--primary-dark);
+    background: #212529;
     color: white;
-    z-index: 2000;
-    box-shadow: 5px 0 15px rgba(0,0,0,0.3);
-    padding-top: 20px;
-    transition: all 0.3s ease;
-}
-
-.sidebar-header {
-    padding: 20px;
-    font-size: 1.4rem;
-    font-weight: bold;
-    border-bottom: 1px solid rgba(255,255,255,0.1);
-    margin-bottom: 10px;
-}
-
-.sidebar-item {
-    padding: 15px 25px;
-    cursor: pointer;
+    z-index: 1000;
+    box-shadow: 2px 0 10px rgba(0,0,0,0.5);
     transition: 0.3s;
-    display: flex;
-    align-items: center;
-    gap: 10px;
 }
-
 .sidebar-item:hover {
-    background: rgba(255,255,255,0.1);
-    color: var(--accent-blue);
-}
-
-.close-sidebar {
-    position: absolute;
-    right: 15px;
-    top: 15px;
-    background: none;
-    border: none;
-    color: white;
-    font-size: 24px;
+    background: #343a40;
     cursor: pointer;
 }
-
 .sidebar-backdrop {
     position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    background: rgba(0,0,0,0.5);
-    z-index: 1999;
+    top: 0; left: 0; width: 100vw; height: 100vh;
+    background: rgba(0,0,0,0.5); z-index: 999;
 }
-
-/* --- Menu Trigger Button --- */
-.menu-trigger {
-    position: absolute;
-    top: 35px; /* Adjusted to prevent overlap */
-    left: 20px;
-    z-index: 100;
-}
-
-/* --- Content Styling --- */
-.custom-card {
-  background: white;
-  border-radius: 12px;
-  border: none;
-  box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-  transition: 0.3s;
-}
-
-.custom-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 10px 20px rgba(0,0,0,0.1);
-}
-
-.content-area {
-    min-height: 500px;
-}
-
-.fade-in {
-    animation: fadeIn 0.4s ease;
-}
-
-@keyframes fadeIn {
-    from { opacity: 0; } to { opacity: 1; }
-}
-
-/* --- Support Modal --- */
 .help-overlay {
     position: fixed;
     top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0,0,0,0.7);
+    background: rgba(0,0,0,0.8);
     display: flex; justify-content: center; align-items: center;
-    z-index: 3000;
-}
-
-.help-modal {
-    background: white; padding: 40px; border-radius: 15px;
-    width: 90%; max-width: 450px; text-align: center;
+    z-index: 2000;
 }

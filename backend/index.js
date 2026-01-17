@@ -1,83 +1,107 @@
 const express = require('express');
-const mysql = require('mysql2');
+const mongoose = require('mongoose');
 const cors = require('cors');
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-// MySQL Connection Setup
-const db = mysql.createConnection({
-    host: '127.0.0.1',
-    user: 'root',
-    password: 'Vickypatel@120',
-    database: 'inventory_db',
-    port: 3306
+// --- MONGODB ATLAS CONNECTION ---
+const mongoURI = "mongodb+srv://vicky_admin:Vicky12345@cluster0.ucrdwzw.mongodb.net/inventory_db?retryWrites=true&w=majority&appName=Cluster0";
+
+mongoose.connect(mongoURI)
+    .then(() => console.log("✅ Database Connected: Vicky's Inventory System"))
+    .catch((err) => console.error("❌ DB Connection Error:", err));
+
+// --- SCHEMAS & MODELS ---
+
+// 1. Product Schema (Maal kitna hai)
+const productSchema = new mongoose.Schema({
+    name: { type: String, required: true },
+    price: { type: Number, required: true },
+    stock_quantity: { type: Number, required: true },
+    updatedAt: { type: Date, default: Date.now }
+});
+const Product = mongoose.model('Product', productSchema);
+
+// 2. Sales Schema (Kitna bika aur kitna paisa aaya)
+const saleSchema = new mongoose.Schema({
+    productName: String,
+    quantitySold: Number,
+    totalAmount: Number,
+    saleDate: { type: Date, default: Date.now }
+});
+const Sale = mongoose.model('Sale', saleSchema);
+
+// --- API ROUTES ---
+
+// A. PRODUCT ROUTES
+
+// 1. Get all products
+app.get('/api/products', async (req, res) => {
+    try {
+        const products = await Product.find().sort({ updatedAt: -1 });
+        res.json(products);
+    } catch (err) { res.status(500).json(err); }
 });
 
-db.connect((err) => {
-    if (err) {
-        console.error("❌ Database Connection Failed:", err.message);
-    } else {
-        console.log("✅ MySQL Connected Successfully!");
-    }
+// 2. Add a new product
+app.post('/api/add', async (req, res) => {
+    try {
+        const newProduct = new Product(req.body);
+        await newProduct.save();
+        res.status(201).json({ message: "Product Added Successfully!" });
+    } catch (err) { res.status(400).json(err); }
 });
 
-// --- ROUTES ---
-
-// 1. Get All Products
-app.get('/api/products', (req, res) => {
-    const sql = "SELECT * FROM products ORDER BY id DESC";
-    db.query(sql, (err, data) => {
-        if (err) return res.status(500).json({ error: err.message });
-        res.json(data);
-    });
-});
-
-// 2. Add New Product
-app.post('/api/add', (req, res) => {
-    const { name, category, price, stock_quantity } = req.body;
-    if (!name || !price || !stock_quantity) {
-        return res.status(400).json({ error: "All fields are required" });
-    }
-    const sql = "INSERT INTO products (name, category, price, stock_quantity) VALUES (?, ?, ?, ?)";
-    db.query(sql, [name, category, price, stock_quantity], (err, result) => {
-        if (err) return res.status(500).json({ error: err.message });
-        res.json({ message: "Product Added Successfully!" });
-    });
-});
-
-// 3. Update Product (Edit/Save Functionality)
-app.put('/api/update/:id', (req, res) => {
-    const { id } = req.params;
-    const { name, category, price, stock_quantity } = req.body;
-    const sql = "UPDATE products SET name=?, category=?, price=?, stock_quantity=? WHERE id=?";
-    db.query(sql, [name, category, price, stock_quantity, id], (err, result) => {
-        if (err) return res.status(500).json({ error: err.message });
-        res.json({ message: "Product Updated Successfully!" });
-    });
-});
-
-// 4. Delete Product
-app.delete('/api/delete/:id', (req, res) => {
-    const { id } = req.params;
-    const sql = "DELETE FROM products WHERE id = ?";
-    db.query(sql, [id], (err, result) => {
-        if (err) return res.status(500).json({ error: err.message });
+// 3. Delete a product
+app.delete('/api/delete/:id', async (req, res) => {
+    try {
+        await Product.findByIdAndDelete(req.params.id);
         res.json({ message: "Product Deleted!" });
-    });
+    } catch (err) { res.status(500).json(err); }
 });
 
-// 5. Get Sales Records
-app.get('/api/sales', (req, res) => {
-    const sql = "SELECT * FROM sales ORDER BY sale_date DESC";
-    db.query(sql, (err, data) => {
-        if (err) return res.json([]);
-        res.json(data);
-    });
+// B. SALES ROUTES
+
+// 4. Record a Sale (Logic: Item becho -> Stock kam karo -> Sale record karo)
+app.post('/api/sell', async (req, res) => {
+    const { productId, quantitySold } = req.body;
+    try {
+        const product = await Product.findById(productId);
+        
+        if (!product) return res.status(404).json({ message: "Product not found" });
+        if (product.stock_quantity < quantitySold) {
+            return res.status(400).json({ message: "Insufficient Stock!" });
+        }
+
+        // 1. Update Inventory (Stock kam karo)
+        product.stock_quantity -= quantitySold;
+        await product.save();
+
+        // 2. Record Sale (History banao)
+        const totalAmount = product.price * quantitySold;
+        const newSale = new Sale({
+            productName: product.name,
+            quantitySold: quantitySold,
+            totalAmount: totalAmount
+        });
+        await newSale.save();
+
+        res.json({ message: "Sale Successful!", totalAmount });
+    } catch (err) { res.status(500).json(err); }
 });
 
-const PORT = 5000;
+// 5. Get Sales History (Summary ke liye)
+app.get('/api/sales-summary', async (req, res) => {
+    try {
+        const sales = await Sale.find().sort({ saleDate: -1 });
+        res.json(sales);
+    } catch (err) { res.status(500).json(err); }
+});
+
+// --- SERVER SETUP ---
+const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
-    console.log(`🚀 Server is running on http://localhost:${PORT}`);
+    console.log(`🚀 Server Running on http://localhost:${PORT}`);
 });

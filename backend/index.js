@@ -6,38 +6,31 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// --- MONGODB ATLAS CONNECTION ---
+// --- MONGODB CONNECTION ---
 const mongoURI = "mongodb+srv://vicky_admin:Vicky12345@cluster0.ucrdwzw.mongodb.net/inventory_db?retryWrites=true&w=majority&appName=Cluster0";
 
 mongoose.connect(mongoURI)
-    .then(() => console.log("✅ Database Connected: Vicky's Inventory System"))
+    .then(() => console.log("✅ Database Connected: Vicky's Inventory"))
     .catch((err) => console.error("❌ DB Connection Error:", err));
 
-// --- SCHEMAS & MODELS ---
-
-// 1. Product Schema (Maal kitna hai)
-const productSchema = new mongoose.Schema({
+// --- MODELS ---
+const Product = mongoose.model('Product', new mongoose.Schema({
     name: { type: String, required: true },
     price: { type: Number, required: true },
     stock_quantity: { type: Number, required: true },
     updatedAt: { type: Date, default: Date.now }
-});
-const Product = mongoose.model('Product', productSchema);
+}));
 
-// 2. Sales Schema (Kitna bika aur kitna paisa aaya)
-const saleSchema = new mongoose.Schema({
+const Sale = mongoose.model('Sale', new mongoose.Schema({
     productName: String,
     quantitySold: Number,
     totalAmount: Number,
     saleDate: { type: Date, default: Date.now }
-});
-const Sale = mongoose.model('Sale', saleSchema);
+}));
 
-// --- API ROUTES ---
+// --- ROUTES ---
 
-// A. PRODUCT ROUTES
-
-// 1. Get all products
+// 1. Get All Products
 app.get('/api/products', async (req, res) => {
     try {
         const products = await Product.find().sort({ updatedAt: -1 });
@@ -45,54 +38,41 @@ app.get('/api/products', async (req, res) => {
     } catch (err) { res.status(500).json(err); }
 });
 
-// 2. Add a new product
+// 2. Add Product
 app.post('/api/add', async (req, res) => {
     try {
         const newProduct = new Product(req.body);
         await newProduct.save();
-        res.status(201).json({ message: "Product Added Successfully!" });
+        res.status(201).json({ message: "Added!" });
     } catch (err) { res.status(400).json(err); }
 });
 
-// 3. Delete a product
+// 3. Update Product (Fix: Edit Logic)
+app.put('/api/update/:id', async (req, res) => {
+    try {
+        // Sirf wahi data update hoga jo body mein hai
+        const updated = await Product.findByIdAndUpdate(
+            req.params.id, 
+            { $set: req.body }, 
+            { new: true }
+        );
+        if (!updated) return res.status(404).json({ message: "Not found" });
+        res.json(updated);
+    } catch (err) { 
+        console.error("Update Error:", err);
+        res.status(500).json({ error: err.message }); 
+    }
+});
+
+// 4. Delete Product
 app.delete('/api/delete/:id', async (req, res) => {
     try {
         await Product.findByIdAndDelete(req.params.id);
-        res.json({ message: "Product Deleted!" });
+        res.json({ message: "Deleted!" });
     } catch (err) { res.status(500).json(err); }
 });
 
-// B. SALES ROUTES
-
-// 4. Record a Sale (Logic: Item becho -> Stock kam karo -> Sale record karo)
-app.post('/api/sell', async (req, res) => {
-    const { productId, quantitySold } = req.body;
-    try {
-        const product = await Product.findById(productId);
-        
-        if (!product) return res.status(404).json({ message: "Product not found" });
-        if (product.stock_quantity < quantitySold) {
-            return res.status(400).json({ message: "Insufficient Stock!" });
-        }
-
-        // 1. Update Inventory (Stock kam karo)
-        product.stock_quantity -= quantitySold;
-        await product.save();
-
-        // 2. Record Sale (History banao)
-        const totalAmount = product.price * quantitySold;
-        const newSale = new Sale({
-            productName: product.name,
-            quantitySold: quantitySold,
-            totalAmount: totalAmount
-        });
-        await newSale.save();
-
-        res.json({ message: "Sale Successful!", totalAmount });
-    } catch (err) { res.status(500).json(err); }
-});
-
-// 5. Get Sales History (Summary ke liye)
+// 5. Sales Summary
 app.get('/api/sales-summary', async (req, res) => {
     try {
         const sales = await Sale.find().sort({ saleDate: -1 });
@@ -100,8 +80,5 @@ app.get('/api/sales-summary', async (req, res) => {
     } catch (err) { res.status(500).json(err); }
 });
 
-// --- SERVER SETUP ---
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-    console.log(`🚀 Server Running on http://localhost:${PORT}`);
-});
+const PORT = 5000;
+app.listen(PORT, () => console.log(`🚀 Server on http://localhost:${PORT}`));

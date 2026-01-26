@@ -2,8 +2,8 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import './Inventory.css';
 
-// Yahan maine tera backend link fix kar diya hai
-const API_BASE_URL = "https://vicky-inventory-backend.onrender.com/api";
+// Local testing ke liye niche wala use karein, production ke liye render wala
+const API_BASE_URL = "http://localhost:5000/api"; 
 
 function App() {
   const [products, setProducts] = useState([]);
@@ -18,12 +18,11 @@ function App() {
 
   const fetchData = async () => {
     try {
-      // Localhost ki jagah ab ye Render se data layega
       const res = await axios.get(`${API_BASE_URL}/products`);
       setProducts(res.data);
       const saleRes = await axios.get(`${API_BASE_URL}/sales-summary`);
       setSales(saleRes.data);
-    } catch (err) { console.error("Data fetch nahi ho raha:", err); }
+    } catch (err) { console.error("Fetch error:", err); }
   };
 
   useEffect(() => { fetchData(); }, []);
@@ -38,15 +37,30 @@ function App() {
 
   const handleEditClick = (p) => {
     setEditId(p._id);
-    setEditFormData({ name: p.name, price: p.price, stock_quantity: p.stock_quantity });
+    // Sirf wahi data save kar rahe hain jo badalna hai
+    setEditFormData({ 
+      name: p.name, 
+      price: p.price, 
+      stock_quantity: p.stock_quantity 
+    });
   };
 
   const handleUpdate = (id) => {
-    axios.put(`${API_BASE_URL}/update/${id}`, editFormData).then(() => {
+    // CRITICAL FIX: Yahan se humne ensure kiya hai ki purana id ya version nahi ja raha
+    axios.put(`${API_BASE_URL}/update/${id}`, {
+      name: editFormData.name,
+      price: editFormData.price,
+      stock_quantity: editFormData.stock_quantity
+    })
+    .then(() => {
       alert("Updated Successfully!");
       setEditId(null);
       fetchData();
-    }).catch(err => console.error(err));
+    })
+    .catch(err => {
+      console.error("Update fail:", err.response?.data || err.message);
+      alert("Update Failed! Check Console.");
+    });
   };
 
   const totalInventoryValue = products.reduce((acc, p) => acc + (p.price * p.stock_quantity), 0);
@@ -145,9 +159,9 @@ function App() {
           <div className="card p-5 shadow border-0 mx-auto" style={{maxWidth: '500px'}}>
             <h3 className="text-success mb-4">New Entry</h3>
             <form onSubmit={handleAdd}>
-              <input className="form-control mb-3" placeholder="Item Name" onChange={e => setFormData({...formData, name: e.target.value})} />
-              <input className="form-control mb-3" type="number" placeholder="Price" onChange={e => setFormData({...formData, price: e.target.value})} />
-              <input className="form-control mb-3" type="number" placeholder="Qty" onChange={e => setFormData({...formData, stock_quantity: e.target.value})} />
+              <input className="form-control mb-3" placeholder="Item Name" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} />
+              <input className="form-control mb-3" type="number" placeholder="Price" value={formData.price} onChange={e => setFormData({...formData, price: e.target.value})} />
+              <input className="form-control mb-3" type="number" placeholder="Qty" value={formData.stock_quantity} onChange={e => setFormData({...formData, stock_quantity: e.target.value})} />
               <button className="btn btn-success w-100 py-3 fw-bold">SAVE ITEM</button>
             </form>
           </div>

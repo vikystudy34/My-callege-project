@@ -23,14 +23,22 @@ function App() {
   const [editFormData, setEditFormData] = useState({ name: '', price: '', stock_quantity: '' });
 
   // Check persistent login session on component mount
-  useEffect(() => {
-    const savedUser = localStorage.getItem('vicky_user');
-    if (savedUser) {
+  // --- Updated useEffect to prevent "undefined" error ---
+useEffect(() => {
+  const savedUser = localStorage.getItem('vicky_user');
+  
+  // Check if savedUser exists and is NOT the string "undefined"
+  if (savedUser && savedUser !== "undefined") {
+    try {
       setUser(JSON.parse(savedUser));
       setIsLoggedIn(true);
       fetchData();
+    } catch (error) {
+      console.error("Error parsing local storage user:", error);
+      localStorage.removeItem('vicky_user'); // Clear corrupt data
     }
-  }, []);
+  }
+}, []);
 
   // Fetch initial data from Backend API
   const fetchData = async () => {

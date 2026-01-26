@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import './Inventory.css';
 
-const API_BASE_URL = "http://localhost:5000/api";
+const API_BASE_URL = "https://vicky-inventory-system.onrender.com/";
 
 function App() {
   // --- AUTHENTICATION & NAVIGATION STATES ---

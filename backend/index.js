@@ -5,35 +5,51 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
 const app = express();
-const PORT = process.env.PORT || 5000;
-const JWT_SECRET = "vicky_secret_key_123"; // Use environment variable in production
 
-// --- 1. MIDDLEWARE SETUP ---
-// Professional English Comments for College Submission
+// --- 1. MIDDLEWARE CONFIGURATION ---
 app.use(express.json());
 
-// CORS Configuration: Essential for Mobile and External API Access
+// Enhanced CORS to allow access from Mobile and Render Frontend
 app.use(cors({
     origin: "*", 
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true
 }));
 
-// --- 2. DATABASE CONNECTION ---
-mongoose.connect('mongodb://localhost:27017/inventoryDB') // Update with Mongo Atlas URI for Render
-    .then(() => console.log("✅ Database Connected Successfully"))
-    .catch(err => console.log("❌ DB Connection Error:", err));
+// --- 2. DATABASE CONNECTION (MongoDB Atlas) ---
+const mongoURI = "mongodb+srv://vicky_admin:Vicky12345@cluster0.ucrdwzw.mongodb.net/inventory_db?retryWrites=true&w=majority&appName=Cluster0";
 
-// --- 3. SCHEMAS & MODELS ---
+mongoose.connect(mongoURI)
+    .then(() => console.log("✅ Database Connected: Inventory Management System"))
+    .catch((err) => console.error("❌ DB Connection Error:", err));
 
-// User Schema for Authentication
+// --- 3. DATA MODELS ---
+
+// Product Schema for Inventory Items
+const Product = mongoose.model('Product', new mongoose.Schema({
+    name: { type: String, required: true },
+    price: { type: Number, required: true },
+    stock_quantity: { type: Number, required: true },
+    updatedAt: { type: Date, default: Date.now }
+}));
+
+// Sale Schema for Transaction Records
+const Sale = mongoose.model('Sale', new mongoose.Schema({
+    productName: String,
+    quantitySold: Number,
+    totalAmount: Number,
+    saleDate: { type: Date, default: Date.now }
+}));
+
+// User Schema for Authentication & Security
 const userSchema = new mongoose.Schema({
     name: { type: String, required: true },
     email: { type: String, required: true, unique: true },
-    password: { type: String, required: true }
+    password: { type: String, required: true },
+    createdAt: { type: Date, default: Date.now }
 });
 
-// Password Hashing Middleware
+// Hash password before saving to the database
 userSchema.pre('save', async function() {
     if (this.isModified('password')) {
         this.password = await bcrypt.hash(this.password, 10);
@@ -42,26 +58,11 @@ userSchema.pre('save', async function() {
 
 const User = mongoose.model('User', userSchema);
 
-// Product Schema
-const productSchema = new mongoose.Schema({
-    name: String,
-    price: Number,
-    stock_quantity: Number
-});
-const Product = mongoose.model('Product', productSchema);
+// --- 4. API ROUTES ---
 
-// Sales Schema
-const saleSchema = new mongoose.Schema({
-    productName: String,
-    quantitySold: Number,
-    totalAmount: Number,
-    saleDate: { type: Date, default: Date.now }
-});
-const Sale = mongoose.model('Sale', saleSchema);
+// A. AUTHENTICATION ENDPOINTS
 
-// --- 4. AUTHENTICATION ROUTES ---
-
-// Admin/Staff Registration
+// User Registration Route
 app.post('/api/auth/signup', async (req, res) => {
     try {
         const { name, email, password } = req.body;
@@ -70,63 +71,83 @@ app.post('/api/auth/signup', async (req, res) => {
 
         user = new User({ name, email, password });
         await user.save();
-        res.status(201).json({ message: "User registered successfully" });
+        res.status(201).json({ message: "Registration successful" });
     } catch (err) {
-        res.status(500).json({ message: "Server error during registration", error: err.message });
+        res.status(500).json({ message: "Registration error", error: err.message });
     }
 });
 
-// Admin/Staff Login
+// User Login Route with JWT Generation
 app.post('/api/auth/login', async (req, res) => {
     try {
         const { email, password } = req.body;
         const user = await User.findOne({ email });
-        if (!user) return res.status(400).json({ message: "Invalid Credentials" });
+        if (!user) return res.status(400).json({ message: "Invalid email or password" });
 
         const isMatch = await bcrypt.compare(password, user.password);
-        if (!isMatch) return res.status(400).json({ message: "Invalid Credentials" });
+        if (!isMatch) return res.status(400).json({ message: "Invalid email or password" });
 
-        const token = jwt.sign({ id: user._id }, JWT_SECRET, { expiresIn: '1d' });
-        res.json({ token, user: { id: user._id, name: user.name, email: user.email } });
+        const token = jwt.sign({ id: user._id }, "vicky_secret_key_123", { expiresIn: '24h' });
+
+        res.json({
+            token,
+            user: { id: user._id, name: user.name, email: user.email }
+        });
     } catch (err) {
-        res.status(500).json({ message: "Login error", error: err.message });
+        res.status(500).json({ message: "Login server error" });
     }
 });
 
-// --- 5. INVENTORY & SALES ROUTES ---
+// B. INVENTORY MANAGEMENT ENDPOINTS
 
-// Get all products
+// Fetch all products
 app.get('/api/products', async (req, res) => {
-    const products = await Product.find();
-    res.json(products);
+    try {
+        const products = await Product.find().sort({ updatedAt: -1 });
+        res.json(products);
+    } catch (err) { res.status(500).json({ message: err.message }); }
 });
 
-// Add new product
+// Create new product entry
 app.post('/api/add', async (req, res) => {
-    const newProduct = new Product(req.body);
-    await newProduct.save();
-    res.json(newProduct);
+    try {
+        const newProduct = new Product(req.body);
+        await newProduct.save();
+        res.status(201).json(newProduct);
+    } catch (err) { res.status(400).json({ message: err.message }); }
 });
 
-// Update product
+// Update existing product by ID
 app.put('/api/update/:id', async (req, res) => {
-    const updatedProduct = await Product.findByIdAndUpdate(req.params.id, req.body, { new: true });
-    res.json(updatedProduct);
+    try {
+        const updated = await Product.findByIdAndUpdate(
+            req.params.id, 
+            { $set: req.body }, 
+            { new: true }
+        );
+        if (!updated) return res.status(404).json({ message: "Product not found" });
+        res.json(updated);
+    } catch (err) { res.status(500).json({ message: err.message }); }
 });
 
-// Delete product
+// Delete product by ID
 app.delete('/api/delete/:id', async (req, res) => {
-    await Product.findByIdAndDelete(req.params.id);
-    res.json({ message: "Deleted" });
+    try {
+        await Product.findByIdAndDelete(req.params.id);
+        res.json({ message: "Product deleted" });
+    } catch (err) { res.status(500).json({ message: err.message }); }
 });
 
-// Get sales summary
+// C. SALES ANALYTICS ENDPOINTS
+
+// Fetch sales summary history
 app.get('/api/sales-summary', async (req, res) => {
-    const sales = await Sale.find().sort({ saleDate: -1 });
-    res.json(sales);
+    try {
+        const sales = await Sale.find().sort({ saleDate: -1 });
+        res.json(sales);
+    } catch (err) { res.status(500).json({ message: err.message }); }
 });
 
-// --- 6. SERVER INITIALIZATION ---
-app.listen(PORT, () => {
-    console.log(`🚀 Server running on port ${PORT}`);
-});
+// --- 5. SERVER INITIALIZATION ---
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));

@@ -6,22 +6,22 @@ const jwt = require('jsonwebtoken');
 
 const app = express();
 
-// --- MIDDLEWARE ---
+// --- 1. MIDDLEWARE (Updated for Render) ---
 app.use(express.json());
 app.use(cors({
-    origin: "*",
+    origin: "*", // Production mein ise specific URL se badal sakte hain
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true
 }));
 
-// --- DATABASE CONNECTION ---
+// --- 2. DATABASE CONNECTION ---
 const mongoURI = "mongodb+srv://vicky_admin:Vicky12345@cluster0.ucrdwzw.mongodb.net/inventory_db?retryWrites=true&w=majority&appName=Cluster0";
 
 mongoose.connect(mongoURI)
     .then(() => console.log("✅ Database Connected: Inventory Management System"))
     .catch((err) => console.error("❌ DB Connection Error:", err));
 
-// --- DATA MODELS ---
+// --- 3. DATA MODELS ---
 const Product = mongoose.model('Product', new mongoose.Schema({
     name: { type: String, required: true },
     price: { type: Number, required: true },
@@ -43,7 +43,7 @@ const User = mongoose.model('User', new mongoose.Schema({
     createdAt: { type: Date, default: Date.now }
 }));
 
-// --- API ROUTES ---
+// --- 4. API ROUTES ---
 
 app.get("/", (req, res) => res.send("Inventory System Backend is Live! 🚀"));
 
@@ -125,5 +125,8 @@ app.get('/api/sales-summary', async (req, res) => {
     } catch (err) { res.status(500).json({ message: err.message }); }
 });
 
+// --- 5. START SERVER (Updated for Render) ---
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+app.listen(PORT, "0.0.0.0", () => {
+    console.log(`🚀 Server running on port ${PORT}`);
+});

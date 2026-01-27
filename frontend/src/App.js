@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import './Inventory.css';
 
-const API_BASE_URL = "https://vicky-inventory-system.onrender.com/api";
+const API_BASE_URL = "http://localhost:5000/api";
 
 function App() {
   // --- AUTHENTICATION & NAVIGATION STATES ---
@@ -23,20 +23,12 @@ function App() {
   const [editFormData, setEditFormData] = useState({ name: '', price: '', stock_quantity: '' });
 
   // Check persistent login session on component mount
-  // --- Updated useEffect to prevent "undefined" error ---
   useEffect(() => {
     const savedUser = localStorage.getItem('vicky_user');
-
-    // Check if savedUser exists and is NOT the string "undefined"
-    if (savedUser && savedUser !== "undefined") {
-      try {
-        setUser(JSON.parse(savedUser));
-        setIsLoggedIn(true);
-        fetchData();
-      } catch (error) {
-        console.error("Error parsing local storage user:", error);
-        localStorage.removeItem('vicky_user'); // Clear corrupt data
-      }
+    if (savedUser) {
+      setUser(JSON.parse(savedUser));
+      setIsLoggedIn(true);
+      fetchData();
     }
   }, []);
 

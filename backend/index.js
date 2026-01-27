@@ -11,7 +11,7 @@ app.use(express.json());
 
 // Enhanced CORS to allow access from Mobile and Render Frontend
 app.use(cors({
-    origin: "*", 
+    origin: "*",
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true
 }));
@@ -50,7 +50,7 @@ const userSchema = new mongoose.Schema({
 });
 
 // Hash password before saving to the database
-userSchema.pre('save', async function() {
+userSchema.pre('save', async function () {
     if (this.isModified('password')) {
         this.password = await bcrypt.hash(this.password, 10);
     }
@@ -121,8 +121,8 @@ app.post('/api/add', async (req, res) => {
 app.put('/api/update/:id', async (req, res) => {
     try {
         const updated = await Product.findByIdAndUpdate(
-            req.params.id, 
-            { $set: req.body }, 
+            req.params.id,
+            { $set: req.body },
             { new: true }
         );
         if (!updated) return res.status(404).json({ message: "Product not found" });

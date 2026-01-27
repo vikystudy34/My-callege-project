@@ -8,13 +8,13 @@ function App() {
   // --- AUTHENTICATION & NAVIGATION STATES ---
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [user, setUser] = useState(null);
-  const [authView, setAuthView] = useState('login'); 
+  const [authView, setAuthView] = useState('login');
   const [authData, setAuthData] = useState({ name: '', email: '', password: '' });
 
   // --- INVENTORY & SEARCH STATES ---
   const [products, setProducts] = useState([]);
   const [sales, setSales] = useState([]);
-  const [searchTerm, setSearchTerm] = useState(""); 
+  const [searchTerm, setSearchTerm] = useState("");
   const [view, setView] = useState('inventory');
   const [formData, setFormData] = useState({ name: '', price: '', stock_quantity: '' });
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -24,21 +24,21 @@ function App() {
 
   // Check persistent login session on component mount
   // --- Updated useEffect to prevent "undefined" error ---
-useEffect(() => {
-  const savedUser = localStorage.getItem('vicky_user');
-  
-  // Check if savedUser exists and is NOT the string "undefined"
-  if (savedUser && savedUser !== "undefined") {
-    try {
-      setUser(JSON.parse(savedUser));
-      setIsLoggedIn(true);
-      fetchData();
-    } catch (error) {
-      console.error("Error parsing local storage user:", error);
-      localStorage.removeItem('vicky_user'); // Clear corrupt data
+  useEffect(() => {
+    const savedUser = localStorage.getItem('vicky_user');
+
+    // Check if savedUser exists and is NOT the string "undefined"
+    if (savedUser && savedUser !== "undefined") {
+      try {
+        setUser(JSON.parse(savedUser));
+        setIsLoggedIn(true);
+        fetchData();
+      } catch (error) {
+        console.error("Error parsing local storage user:", error);
+        localStorage.removeItem('vicky_user'); // Clear corrupt data
+      }
     }
-  }
-}, []);
+  }, []);
 
   // Fetch initial data from Backend API
   const fetchData = async () => {
@@ -93,12 +93,12 @@ useEffect(() => {
 
   const handleUpdate = (id) => {
     axios.put(`${API_BASE_URL}/update/${id}`, editFormData)
-    .then(() => { alert("Update Successful!"); setEditId(null); fetchData(); })
-    .catch(err => alert("Update Failed"));
+      .then(() => { alert("Update Successful!"); setEditId(null); fetchData(); })
+      .catch(err => alert("Update Failed"));
   };
 
   // --- FILTER LOGIC FOR SEARCH ---
-  const filteredProducts = products.filter(p => 
+  const filteredProducts = products.filter(p =>
     p.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -133,8 +133,8 @@ useEffect(() => {
             </button>
           </form>
           <div className="text-center mt-3">
-            <span className="text-muted small" style={{ cursor: 'pointer', textDecoration: 'underline' }} 
-               onClick={() => setAuthView(authView === 'login' ? 'signup' : 'login')}>
+            <span className="text-muted small" style={{ cursor: 'pointer', textDecoration: 'underline' }}
+              onClick={() => setAuthView(authView === 'login' ? 'signup' : 'login')}>
               {authView === 'login' ? "New User? Register Here" : "Already Registered? Login"}
             </span>
           </div>
@@ -156,8 +156,8 @@ useEffect(() => {
           <h2 className="fw-bold text-uppercase m-0 ms-4 text-primary">Inventory Management</h2>
         </div>
         <div className="d-flex align-items-center">
-            <span className="me-3 fw-bold border-end pe-3 text-secondary text-uppercase">{user?.name}</span>
-            <button className="btn btn-outline-danger btn-sm fw-bold shadow-sm" onClick={handleLogout}>LOGOUT</button>
+          <span className="me-3 fw-bold border-end pe-3 text-secondary text-uppercase">{user?.name}</span>
+          <button className="btn btn-outline-danger btn-sm fw-bold shadow-sm" onClick={handleLogout}>LOGOUT</button>
         </div>
       </div>
 
@@ -167,13 +167,13 @@ useEffect(() => {
           <div className="sidebar-backdrop" onClick={() => setIsSidebarOpen(false)}></div>
           <div className="sidebar-overlay shadow-lg">
             <div className="sidebar-header p-3 bg-dark text-white d-flex justify-content-between align-items-center">
-               <span className="fw-bold">MENU PANEL</span>
-               <button className="btn text-white fs-4" onClick={() => setIsSidebarOpen(false)}>×</button>
+              <span className="fw-bold">MENU PANEL</span>
+              <button className="btn text-white fs-4" onClick={() => setIsSidebarOpen(false)}>×</button>
             </div>
-            <div className="sidebar-item p-3 border-bottom" onClick={() => {setView('inventory'); setIsSidebarOpen(false);}}>📊 Stock Dashboard</div>
-            <div className="sidebar-item p-3 border-bottom" onClick={() => {setView('add'); setIsSidebarOpen(false);}}>➕ New Entry</div>
-            <div className="sidebar-item p-3 border-bottom" onClick={() => {setView('sales'); setIsSidebarOpen(false);}}>💰 Sales Analysis</div>
-            <div className="sidebar-item p-3 border-bottom text-info" onClick={() => {setShowHelp(true); setIsSidebarOpen(false);}}>📞 Help & Support</div>
+            <div className="sidebar-item p-3 border-bottom" onClick={() => { setView('inventory'); setIsSidebarOpen(false); }}>📊 Stock Dashboard</div>
+            <div className="sidebar-item p-3 border-bottom" onClick={() => { setView('add'); setIsSidebarOpen(false); }}>➕ New Entry</div>
+            <div className="sidebar-item p-3 border-bottom" onClick={() => { setView('sales'); setIsSidebarOpen(false); }}>💰 Sales Analysis</div>
+            <div className="sidebar-item p-3 border-bottom text-info" onClick={() => { setShowHelp(true); setIsSidebarOpen(false); }}>📞 Help & Support</div>
           </div>
         </>
       )}
@@ -197,13 +197,13 @@ useEffect(() => {
         {view === 'inventory' && (
           <div className="card shadow-sm border-0">
             <div className="card-header bg-dark text-white d-flex justify-content-between align-items-center">
-                <span>INVENTORY RECORDS</span>
-                <input 
-                  type="text" 
-                  className="form-control form-control-sm w-25" 
-                  placeholder="Search by Name..." 
-                  onChange={(e) => setSearchTerm(e.target.value)} 
-                />
+              <span>INVENTORY RECORDS</span>
+              <input
+                type="text"
+                className="form-control form-control-sm w-25"
+                placeholder="Search by Name..."
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
             </div>
             <div className="table-responsive">
               <table className="table table-hover text-center align-middle mb-0">
@@ -215,11 +215,11 @@ useEffect(() => {
                     <tr key={p._id} className={p.stock_quantity < 5 ? "table-danger" : ""}>
                       {editId === p._id ? (
                         <>
-                          <td><input type="text" className="form-control" value={editFormData.name} onChange={(e) => setEditFormData({...editFormData, name: e.target.value})} /></td>
-                          <td><input type="number" className="form-control" value={editFormData.price} onChange={(e) => setEditFormData({...editFormData, price: e.target.value})} /></td>
-                          <td><input type="number" className="form-control" value={editFormData.stock_quantity} onChange={(e) => setEditFormData({...editFormData, stock_quantity: e.target.value})} /></td>
+                          <td><input type="text" className="form-control" value={editFormData.name} onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })} /></td>
+                          <td><input type="number" className="form-control" value={editFormData.price} onChange={(e) => setEditFormData({ ...editFormData, price: e.target.value })} /></td>
+                          <td><input type="number" className="form-control" value={editFormData.stock_quantity} onChange={(e) => setEditFormData({ ...editFormData, stock_quantity: e.target.value })} /></td>
                           <td><button className="btn btn-success btn-sm me-1" onClick={() => handleUpdate(p._id)}>Update</button>
-                              <button className="btn btn-secondary btn-sm" onClick={() => setEditId(null)}>Cancel</button></td>
+                            <button className="btn btn-secondary btn-sm" onClick={() => setEditId(null)}>Cancel</button></td>
                         </>
                       ) : (
                         <>
@@ -227,8 +227,8 @@ useEffect(() => {
                           <td>₹{p.price}</td>
                           <td><span className={`badge ${p.stock_quantity < 5 ? 'bg-danger' : 'bg-info'}`}>{p.stock_quantity}</span></td>
                           <td>
-                            <button className="btn btn-warning btn-sm me-2" onClick={() => {setEditId(p._id); setEditFormData(p);}}>Edit</button>
-                            <button className="btn btn-outline-danger btn-sm" onClick={() => { if(window.confirm("Confirm deletion?")) axios.delete(`${API_BASE_URL}/delete/${p._id}`).then(()=>fetchData()) }}>Delete</button>
+                            <button className="btn btn-warning btn-sm me-2" onClick={() => { setEditId(p._id); setEditFormData(p); }}>Edit</button>
+                            <button className="btn btn-outline-danger btn-sm" onClick={() => { if (window.confirm("Confirm deletion?")) axios.delete(`${API_BASE_URL}/delete/${p._id}`).then(() => fetchData()) }}>Delete</button>
                           </td>
                         </>
                       )}
@@ -242,12 +242,12 @@ useEffect(() => {
 
         {/* Add Product View */}
         {view === 'add' && (
-          <div className="card p-5 shadow border-0 mx-auto" style={{maxWidth: '500px'}}>
+          <div className="card p-5 shadow border-0 mx-auto" style={{ maxWidth: '500px' }}>
             <h3 className="text-success mb-4 text-center fw-bold">Register New Item</h3>
             <form onSubmit={handleAdd}>
-              <div className="mb-3"><input className="form-control py-2" placeholder="Product Name" required value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} /></div>
-              <div className="mb-3"><input className="form-control py-2" type="number" placeholder="Price (INR)" required value={formData.price} onChange={e => setFormData({...formData, price: e.target.value})} /></div>
-              <div className="mb-4"><input className="form-control py-2" type="number" placeholder="Opening Stock" required value={formData.stock_quantity} onChange={e => setFormData({...formData, stock_quantity: e.target.value})} /></div>
+              <div className="mb-3"><input className="form-control py-2" placeholder="Product Name" required value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} /></div>
+              <div className="mb-3"><input className="form-control py-2" type="number" placeholder="Price (INR)" required value={formData.price} onChange={e => setFormData({ ...formData, price: e.target.value })} /></div>
+              <div className="mb-4"><input className="form-control py-2" type="number" placeholder="Opening Stock" required value={formData.stock_quantity} onChange={e => setFormData({ ...formData, stock_quantity: e.target.value })} /></div>
               <button className="btn btn-success w-100 py-3 fw-bold shadow-sm">COMMIT DATA</button>
             </form>
           </div>
@@ -282,7 +282,7 @@ useEffect(() => {
           <div className="help-modal p-4 bg-white rounded shadow-lg text-center" onClick={e => e.stopPropagation()}>
             <h3 className="fw-bold text-primary">System Support</h3>
             <p className="mb-1 text-muted">For technical inquiries, contact the administrator:</p>
-            <hr/>
+            <hr />
             <p className="mb-1"><strong>Email:</strong> admin_support@inventory.com</p>
             <p><strong>Support ID:</strong> #9334681651</p>
             <p className="small text-muted mt-3">Inventory Management System - v1.0.0</p>

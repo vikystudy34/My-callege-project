@@ -25,10 +25,15 @@ function App() {
   // Check persistent login session on component mount
   useEffect(() => {
     const savedUser = localStorage.getItem('vicky_user');
-    if (savedUser) {
-      setUser(JSON.parse(savedUser));
-      setIsLoggedIn(true);
-      fetchData();
+    if (savedUser && savedUser !== "undefined") { // "undefined" check zaroori hai
+      try {
+        setUser(JSON.parse(savedUser));
+        setIsLoggedIn(true);
+        fetchData();
+      } catch (e) {
+        console.error("Session restore error", e);
+        localStorage.removeItem('vicky_user');
+      }
     }
   }, []);
 
